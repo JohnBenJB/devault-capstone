@@ -1,27 +1,111 @@
+
 # DeVault
-A decentralized digital vault for secure storage and verification of important documents, built as a capstone project for the ICP Hub Nigeria caniSTART Developers Programme Cohort 1.
 
-## Features
-- Decentralized document storage
-- Immutable proof of authenticity via blockchain
-- Smart contract access control
-- Audit trail and access logs
+A decentralized digital vault for secure storage and verification of important documents, built as a capstone project.
 
-## Stack
-- Internet Computer Protocol (ICP)
-- Motoko (Smart contracts)
-- React + TailwindCSS (Frontend)
-- Web3.Storage or IPFS (File storage)
+## 🚀 Features
 
-## Getting Started
-1. Clone the repo
-2. Install dependencies: `npm install`
-3. Start local canisters: `dfx start --background`
-4. Deploy canisters: `dfx deploy`
-5. Run frontend: `npm run dev`
+- 🔐 Decentralized document storage  
+- 🛡️ Immutable proof of authenticity via blockchain  
+- 🧠 Smart contract-based access control  
+- 🧾 On-chain audit trail and access logs  
 
-## Folder Structure
-See the project layout in the codebase.
+## 🧱 Stack
 
-## License
+- **Internet Computer Protocol (ICP)** – decentralized backend  
+- **Motoko** – smart contracts for access, verification, and data integrity  
+- **React + TailwindCSS** – modern and responsive frontend  
+- **Web3.Storage / IPFS** – distributed file storage  
+- **Internet Identity** – decentralized user authentication  
+
+## 🧭 Getting Started
+
+1. Clone the repo  
+   ```bash
+   git clone https://github.com/your-username/devault.git
+   cd devault
+   ```
+
+2. Install frontend dependencies  
+   ```bash
+   cd frontend
+   npm install
+   ```
+
+3. Start the ICP local environment  
+   ```bash
+   dfx start --background
+   ```
+
+4. Deploy the canisters  
+   ```bash
+   dfx deploy
+   ```
+
+5. Run the frontend  
+   ```bash
+   npm run dev
+   ```
+
+---
+
+## 📁 Project Structure
+
+```
+Devault-Capstone/
+├── frontend/
+│   ├── public/
+│   ├── src/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   └── tailwind.config.js
+├── backend/
+│   ├── src/
+│   │   └── devault_backend/
+│   │       ├── main.mo
+│   │       └── types.mo
+│   └── dfx.json
+├── README.md
+├── .gitignore
+└── package.json
+```
+
+---
+
+## 🧪 Boilerplate Code
+
+### 📜 `main.mo` (Motoko Canister Placeholder)
+
+```motoko
+actor DeVault {
+  public func greet(name : Text) : async Text {
+    return "Hello, " # name # "! Welcome to DeVault.";
+  }
+}
+```
+
+---
+
+### 💻 `App.jsx` (Starter UI)
+
+```jsx
+import React from "react";
+
+export default function App() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <h1 className="text-3xl font-bold text-gray-800">Welcome to DeVault</h1>
+    </div>
+  );
+}
+```
+
+---
+
+## 📌 License
+
 MIT
+
+---
