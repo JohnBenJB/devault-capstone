@@ -14,48 +14,18 @@ import Result "mo:base/Result";
 import Text "mo:base/Text";
 import Time "mo:base/Time";
 import TrieMap "mo:base/TrieMap";
+import Types "./types";
 
 // Define actor for DeVault canister
 actor DeVault {
 // Type definitions
-public type FileId = Text;
-public type FileInfo = {
-  name : Text;
-  contentType : Text;
-  size : Nat;
-  createdAt : Time.Time;
-  owner : Principal;
-  hash : Text
-};
 
-public type FileContent = {
-  name : Text;
-  content : [Nat8];
-  contentType : Text;
-  createdAt : Time.Time
-};
-
-public type UserProfile = {
-  displayName : Text;
-  bio : Text;
-  email : Text;
-  createdAt : Time.Time;
-  lastLoginAt : Time.Time
-};
-
-public type StorageStats = {
-  filesCount : Nat;
-  totalStorage : Nat;
-  storageLimit : Nat
-};
-
-public type Error = {
-  #NotFound;
-  #AlreadyExists;
-  #NotAuthorized;
-  #StorageLimitExceeded;
-  #SystemError
-};
+public type FileId = Types.FileId
+public type FileInfo = Types.FileInfo;
+public type FileContent = Types.FileContent;
+public type UserProfile = Types.UserProfile;
+public type StorageStats = Types.StorageStats;
+public type Error = Types.Error;
 
 // Constants
 let DEFAULT_STORAGE_LIMIT : Nat = 1_073_741_824; // 1GB in bytes
