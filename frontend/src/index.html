@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeVault - Decentralized File Storage</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --bg-color: #f9f9f9;
+            --text-color: #333;
+            --border-color: #ddd;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .tagline {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            margin-right: 5px;
+            cursor: pointer;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .secondary-btn {
+            background-color: #95a5a6;
+        }
+
+        .secondary-btn:hover {
+            background-color: #7f8c8d;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            min-height: 100px;
+        }
+
+        .message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .documents-list {
+            list-style: none;
+        }
+
+        .document-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            margin-bottom: 10px;
+            background-color: white;
+        }
+
+        .document-info {
+            flex-grow: 1;
+        }
+
+        .document-name {
+            font-weight: bold;
+        }
+
+        .document-hash {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+            word-break: break-all;
+        }
+
+        .document-meta {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 30px;
+            height: 30px;
+            margin: 0 auto;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status disconnected">Disconnected</div>
+    
+    <header>
+        <div class="logo">DeVault</div>
+        <div class="tagline">Decentralized File Storage on the Internet Computer</div>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" data-tab="upload">Upload</div>
+            <div class="tab" data-tab="verify">Verify</div>
+            <div class="tab" data-tab="documents">My Documents</div>
+        </div>
+
+        <div class="tab-content active" id="upload-tab">
+            <h2>Upload New File</h2>
+            <div class="form-group">
+                <label for="file-upload">Select File</label>
+                <input type="file" id="file-upload">
+            </div>
+            <div id="upload-message"></div>
+            <div class="form-group">
+                <button id="upload-btn" class="btn">Upload to DeVault</button>
+            </div>
+            <div class="results" id="upload-result">
+                <div class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Processing your file...</p>
+                </div>
+                <div id="result-content" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="verify-tab">
+            <h2>Verify Document</h2>
+            <div class="form-group">
+                <label for="document-hash">Document Hash</label>
+                <input type="text" id="document-hash" placeholder="Enter document hash to verify">
+            </div>
+            <div class="form-group">
+                <button id="verify-btn" class="btn">Verify Document</button>
+            </div>
+            <div class="results" id="verify-result">
+                <div class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Verifying document...</p>
+                </div>
+                <div id="verify-content" style="display: none;"></div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="documents-tab">
+            <h2>My Documents</h2>
+            <div class="form-group">
+                <button id="refresh-btn" class="btn">Refresh List</button>
+            </div>
+            <div class="results" id="documents-result">
+                <div class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p>Loading your documents...</p>
+                </div>
+                <ul class="documents-list" id="documents-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let actor = null;
+        let principal = null;
+        
+        // Function to initialize the connection to the IC
+        async function initConnection() {
+            try {
+                // Placeholder for actual IC connection
+                // In a real app, you would use the agent-js library
+                console.log("Connecting to Internet Computer...");
+                
+                // Simulate connection delay
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Update connection status
+                document.querySelector('.connection-status').classList.remove('disconnected');
+                document.querySelector('.connection-status').classList.add('connected');
+                document.querySelector('.connection-status').textContent = 'Connected';
+                
+                // In a real app, you would get the user's principal
+                principal = "2vxsx-fae";  // Example principal
+                
+                return true;
+            } catch (error) {
+                console.error("Connection failed:", error);
+                showMessage('upload-message', 'Failed to connect to Internet Computer. Please check your network connection.', 'error');
+                return false;
+            }
+        }
+        
+        // Function to compute SHA-256 hash of a file
+        async function computeFileHash(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    try {
+                        const arrayBuffer = e.target.result;
+                        const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+                        const hashArray = Array.from(new Uint8Array(hashBuffer));
+                        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                        resolve(hashHex);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+        
+        // Function to upload a file
+        async function uploadFile() {
+            const fileInput = document.getElementById('file-upload');
+            const uploadResult = document.getElementById('upload-result');
+            const resultContent = document.getElementById('result-content');
+            const loadingIndicator = uploadResult.querySelector('.loading');
+            
+            // Validate file input
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showMessage('upload-message', 'Please select a file to upload', 'error');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            
+            try {
+                // Show loading indicator
+                loadingIndicator.style.display = 'block';
+                resultContent.style.display = 'none';
+                
+                // Compute file hash
+                const hash = await computeFileHash(file);
+                
+                // Call the backend (mocked for demo)
+                // In a real app, this would call your canister
+                const response = await mockStoreDocument(hash, file.name);
+                
+                // Hide loading indicator and show result
+                loadingIndicator.style.display = 'none';
+                resultContent.style.display = 'block';
+                
+                // Format and display response
+                if (response.ok) {
+                    resultContent.innerHTML = `
+                        <div class="message success">
+                            <p><strong>File stored successfully!</strong></p>
+                            <p>Filename: ${file.name}</p>
+                            <p>Hash: ${hash}</p>
+                            <p>Size: ${formatFileSize(file.size)}</p>
+                        </div>
+                    `;
+                } else {
+                    resultContent.innerHTML = `
+                        <div class="message error">
+                            <p><strong>Failed to store file:</strong> ${response.err[Object.keys(response.err)[0]]}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error("Upload failed:", error);
+                loadingIndicator.style.display = 'none';
+                resultContent.style.display = 'block';
+                resultContent.innerHTML = `
+                    <div class="message error">
+                        <p><strong>Error:</strong> ${error.message || 'Unknown error occurred during upload'}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Function to verify a document
+        async function verifyDocument() {
+            const hashInput = document.getElementById('document-hash');
+            const verifyResult = document.getElementById('verify-result');
+            const verifyContent = document.getElementById('verify-content');
+            const loadingIndicator = verifyResult.querySelector('.loading');
+            
+            const hash = hashInput.value.trim();
+            
+            // Validate hash input
+            if (!hash) {
+                showMessage('verify-message', 'Please enter a document hash', 'error');
+                return;
+            }
+            
+            try {
+                // Show loading indicator
+                loadingIndicator.style.display = 'block';
+                verifyContent.style.display = 'none';
+                
+                // Call the backend (mocked for demo)
+                const exists = await mockVerifyDocument(hash);
+                
+                // If document exists, get its details
+                let docDetails = null;
+                if (exists) {
+                    docDetails = await mockGetDocument(hash);
+                }
+                
+                // Hide loading indicator and show result
+                loadingIndicator.style.display = 'none';
+                verifyContent.style.display = 'block';
+                
+                // Format and display response
+                if (exists && docDetails.ok) {
+                    const doc = docDetails.ok;
+                    const date = new Date(Number(doc.uploadedAt) / 1000000); // Convert nanoseconds to milliseconds
+                    
+                    verifyContent.innerHTML = `
+                        <div class="message success">
+                            <p><strong>Document verified!</strong></p>
+                            <p>Filename: ${doc.fileName}</p>
+                            <p>Uploaded by: ${doc.uploadedBy}</p>
+                            <p>Uploaded on: ${date.toLocaleString()}</p>
+                        </div>
+                    `;
+                } else {
+                    verifyContent.innerHTML = `
+                        <div class="message error">
+                            <p><strong>Document not found</strong></p>
+                            <p>No document with the hash "${hash}" exists in the system.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error("Verification failed:", error);
+                loadingIndicator.style.display = 'none';
+                verifyContent.style.display = 'block';
+                verifyContent.innerHTML = `
+                    <div class="message error">
+                        <p><strong>Error:</strong> ${error.message || 'Unknown error occurred during verification'}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Function to load user documents
+        async function loadUserDocuments() {
+            const documentsResult = document.getElementById('documents-result');
+            const documentsList = document.getElementById('documents-list');
+            const loadingIndicator = documentsResult.querySelector('.loading');
+            
+            try {
+                // Show loading indicator
+                loadingIndicator.style.display = 'block';
+                documentsList.style.display = 'none';
+                
+                // Call the backend (mocked for demo)
+                const documents = await mockGetUserDocuments(principal);
+                
+                // Hide loading indicator and show result
+                loadingIndicator.style.display = 'none';
+                documentsList.style.display = 'block';
+                
+                // Clear previous results
+                documentsList.innerHTML = '';
+                
+                // Check if any documents were found
+                if (documents.length === 0) {
+                    documentsList.innerHTML = `
+                        <div class="message">
+                            <p>You haven't uploaded any documents yet.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Add documents to the list
+                documents.forEach(doc => {
+                    const date = new Date(Number(doc.uploadedAt) / 1000000); // Convert nanoseconds to milliseconds
+                    
+                    const li = document.createElement('li');
+                    li.className = 'document-item';
+                    li.innerHTML = `
+                        <div class="document-info">
+                            <div class="document-name">${doc.fileName}</div>
+                            <div class="document-hash">${doc.hash}</div>
+                            <div class="document-meta">Uploaded on ${date.toLocaleString()}</div>
+                        </div>
+                        <div class="action-btns">
+                            <button class="btn secondary-btn verify-doc-btn" data-hash="${doc.hash}">Verify</button>
+                            <button class="btn secondary-btn delete-doc-btn" data-hash="${doc.hash}">Delete</button>
+                        </div>
+                    `;
+                    documentsList.appendChild(li);
+                });
+                
+                // Add event listeners to the buttons
+                document.querySelectorAll('.verify-doc-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        const hash = this.getAttribute('data-hash');
+                        document.getElementById('document-hash').value = hash;
+                        switchTab('verify');
+                    });
+                });
+                
+                document.querySelectorAll('.delete-doc-btn').forEach(btn => {
+                    btn.addEventListener('click', async function() {
+                        const hash = this.getAttribute('data-hash');
+                        if (confirm('Are you sure you want to delete this document?')) {
+                            await deleteDocument(hash);
+                            await loadUserDocuments();
+                        }
+                    });
+                });
+                
+            } catch (error) {
+                console.error("Loading documents failed:", error);
+                loadingIndicator.style.display = 'none';
+                documentsList.style.display = 'block';
+                documentsList.innerHTML = `
+                    <div class="message error">
+                        <p><strong>Error:</strong> ${error.message || 'Unknown error occurred while loading documents'}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Function to delete a document
+        async function deleteDocument(hash) {
+            try {
+                const result = await mockDeleteDocument(hash);
+                if (result.ok) {
+                    showMessage('documents-message', 'Document deleted successfully!', 'success');
+                } else {
+                    showMessage('documents-message', `Failed to delete document: ${result.err[Object.keys(result.err)[0]]}`, 'error');
+                }
+            } catch (error) {
+                console.error("Delete failed:", error);
+                showMessage('documents-message', `Error: ${error.message || 'Unknown error occurred during deletion'}`, 'error');
+            }
+        }
+        
+        // Helper function to format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            else if (bytes < 1048576) return (bytes / 1024).toFixed(2) + ' KB';
+            else return (bytes / 1048576).toFixed(2) + ' MB';
+        }
+        
+        // Helper function to show messages
+        function showMessage(elementId, message, type) {
+            const messageElement = document.getElementById(elementId);
+            if (messageElement) {
+                messageElement.innerHTML = `<div class="message ${type}">${message}</div>`;
+                setTimeout(() => {
+                    messageElement.innerHTML = '';
+                }, 5000);
+            }
+        }
+        
+        // Function to switch tabs
+        function switchTab(tabId) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show the selected tab content
+            document.getElementById(`${tabId}-tab`).classList.add('active');
+            
+            // Add active class to the clicked tab
+            document.querySelector(`.tab[data-tab="${tabId}"]`).classList.add('active');
+        }
+        
+        // ============= MOCK API FUNCTIONS =============
+        // These would be replaced with actual calls to your canister in a real app
+        
+        // Store a few example documents in memory for demo
+        const mockDocuments = new Map();
+        
+        async function mockStoreDocument(hash, fileName) {
+            await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate network delay
+            
+            if (mockDocuments.has(hash)) {
+                return { err: { AlreadyExists: "Document with this hash already exists" } };
+            }
+            
+            const doc = {
+                hash: hash,
+                fileName: fileName,
+                uploadedBy: principal,
+                uploadedAt: BigInt(Date.now() * 1000000) // Convert to nanoseconds
+            };
+            
+            mockDocuments.set(hash, doc);
+            return { ok: doc };
+        }
+        
+        async function mockVerifyDocument(hash) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+            return mockDocuments.has(hash);
+        }
+        
+        async function mockGetDocument(hash) {
+            await new Promise(resolve => setTimeout(resolve, 800)); // Simulate network delay
+            
+            if (mockDocuments.has(hash)) {
+                return { ok: mockDocuments.get(hash) };
+            } else {
+                return { err: { NotFound: "Document not found" } };
+            }
+        }
+        
+        async function mockGetUserDocuments(userPrincipal) {
+            await new Promise(resolve => setTimeout(resolve, 1200)); // Simulate network delay
+            
+            const userDocs = [];
+            mockDocuments.forEach(doc => {
+                if (doc.uploadedBy === userPrincipal) {
+                    userDocs.push(doc);
+                }
+            });
+            
+            return userDocs;
+        }
+        
+        async function mockDeleteDocument(hash) {
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+            
+            if (!mockDocuments.has(hash)) {
+                return { err: { NotFound: "Document not found" } };
+            }
+            
+            const doc = mockDocuments.get(hash);
+            if (doc.uploadedBy !== principal) {
+                return { err: { NotAuthorized: "Only the document owner can delete it" } };
+            }
+            
+            mockDocuments.delete(hash);
+            return { ok: null };
+        }
+        
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Set up tab switching
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    switchTab(tabId);
+                });
+            });
+            
+            // Set up button event listeners
+            document.getElementById('upload-btn').addEventListener('click', uploadFile);
+            document.getElementById('verify-btn').addEventListener('click', verifyDocument);
+            document.getElementById('refresh-btn').addEventListener('click', loadUserDocuments);
+            
+            // Initialize connection to IC
+            const connected = await initConnection();
+            
+            if (connected) {
+                // Add some example documents for demo purposes
+                await mockStoreDocument(
+                    "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855", 
+                    "example_document.txt"
+                );
+                await mockStoreDocument(
+                    "d7a8fbb307d7809469ca9abcb0082e4f8d5651e46d3cdb762d02d0bf37c9e592", 
+                    "important_data.pdf"
+                );
+                
+                // Load user documents
+                await loadUserDocuments();
+            }
+        });
+    </script>
+</body>
+</html>
