@@ -18,173 +18,174 @@ import Types "./types";
 
 // Define actor for DeVault canister
 actor DeVault {
-// Type definitions
+  // Type definitions
 
-public type FileId = Types.FileId
-public type FileInfo = Types.FileInfo;
-public type FileContent = Types.FileContent;
-public type UserProfile = Types.UserProfile;
-public type StorageStats = Types.StorageStats;
-public type Error = Types.Error;
+  public type FileId = Types.FileId;
+  public type FileInfo = Types.FileInfo;
+  public type FileContent = Types.FileContent;
+  public type UserProfile = Types.UserProfile;
+  public type StorageStats = Types.StorageStats;
+  public type Error = Types.Error;
 
-// Constants
-let DEFAULT_STORAGE_LIMIT : Nat = 1_073_741_824; // 1GB in bytes
+  // Constants
+  let DEFAULT_STORAGE_LIMIT : Nat = 1_073_741_824; // 1GB in bytes
 
-// State variables
-private stable var fileInfoEntries : [(FileId, FileInfo)] = [];
-private stable var fileContentEntries : [(FileId, [Nat8])] = [];
-private stable var userProfileEntries : [(Principal, UserProfile)] = [];
-private stable var userStorageLimitEntries : [(Principal, Nat)] = [];
+  // State variables
+  private stable var fileInfoEntries : [(FileId, FileInfo)] = [];
+  private stable var fileContentEntries : [(FileId, [Nat8])] = [];
+  private stable var userProfileEntries : [(Principal, UserProfile)] = [];
+  private stable var userStorageLimitEntries : [(Principal, Nat)] = [];
 
-private var fileInfos = HashMap.HashMap<FileId, FileInfo>(0, Text.equal, Text.hash);
-private var fileContents = HashMap.HashMap<FileId, [Nat8]>(0, Text.equal, Text.hash);
-private var userProfiles = HashMap.HashMap<Principal, UserProfile>(0, Principal.equal, Principal.hash);
-private var userStorageLimits = HashMap.HashMap<Principal, Nat>(0, Principal.equal, Principal.hash);
+  private var fileInfos = HashMap.HashMap<FileId, FileInfo>(0, Text.equal, Text.hash);
+  private var fileContents = HashMap.HashMap<FileId, [Nat8]>(0, Text.equal, Text.hash);
+  private var userProfiles = HashMap.HashMap<Principal, UserProfile>(0, Principal.equal, Principal.hash);
+  private var userStorageLimits = HashMap.HashMap<Principal, Nat>(0, Principal.equal, Principal.hash);
 
-// Helper function to calculate SHA-256 hash (Note: simplified for example)
-private func calculateHash(content : [Nat8]) : Text {
-  // In a real implementation, you would use a proper SHA-256 library
-  // This is just a placeholder
-  return Blob.toHex(Blob.fromArray(content))
-};
-
-// Helper function to get caller's principal
-private func getCaller() : Principal {
-  return Principal.fromActor(DeVault)
-};
-
-// Initialize state from stable variables
-system func preupgrade() {
-  fileInfoEntries := Iter.toArray(fileInfos.entries());
-  fileContentEntries := Iter.toArray(fileContents.entries());
-  userProfileEntries := Iter.toArray(userProfiles.entries());
-  userStorageLimitEntries := Iter.toArray(userStorageLimits.entries())
-};
-
-system func postupgrade() {
-  fileInfos := HashMap.fromIter<FileId, FileInfo>(
-    Iter.fromArray(fileInfoEntries),
-    fileInfoEntries.size(),
-    Text.equal,
-    Text.hash
-  );
-  fileInfoEntries := [];
-
-  fileContents := HashMap.fromIter<FileId, [Nat8]>(
-    Iter.fromArray(fileContentEntries),
-    fileContentEntries.size(),
-    Text.equal,
-    Text.hash
-  );
-  fileContentEntries := [];
-
-  userProfiles := HashMap.fromIter<Principal, UserProfile>(
-    Iter.fromArray(userProfileEntries),
-    userProfileEntries.size(),
-    Principal.equal,
-    Principal.hash
-  );
-  userProfileEntries := [];
-
-  userStorageLimits := HashMap.fromIter<Principal, Nat>(
-    Iter.fromArray(userStorageLimitEntries),
-    userStorageLimitEntries.size(),
-    Principal.equal,
-    Principal.hash
-  );
-  userStorageLimitEntries := []
-};
-
-// Store a file
-public shared (msg) func storeFile(file : FileContent) : async Result.Result<FileInfo, Error> {
-  let caller = msg.caller;
-
-  if (Principal.isAnonymous(caller)) {
-    return #err(#NotAuthorized)
+  // Helper function to calculate SHA-256 hash (Note: simplified for example)
+  private func calculateHash(content : [Nat8]) : Text {
+    // In a real implementation, you would use a proper SHA-256 library
+    // This is just a placeholder
+    return Blob.toHex(Blob.fromArray(content))
   };
 
-  // Calculate file size
-  let fileSize = file.content.size();
-
-  // Check if user has enough storage
-  let userStats = await getUserStorageStats(caller);
-  if (userStats.totalStorage + fileSize > userStats.storageLimit) {
-    return #err(#StorageLimitExceeded)
+  // Helper function to get caller's principal
+  private func getCaller() : Principal {
+    return Principal.fromActor(DeVault)
   };
 
-  // Calculate hash
-  let hash = calculateHash(file.content);
-
-  // Create file info
-  let fileInfo : FileInfo = {
-    name = file.name;
-    contentType = file.contentType;
-    size = fileSize;
-    createdAt = file.createdAt;
-    owner = caller;
-    hash = hash
+  // Initialize state from stable variables
+  system func preupgrade() {
+    fileInfoEntries := Iter.toArray(fileInfos.entries());
+    fileContentEntries := Iter.toArray(fileContents.entries());
+    userProfileEntries := Iter.toArray(userProfiles.entries());
+    userStorageLimitEntries := Iter.toArray(userStorageLimits.entries())
   };
 
-  // Store file
-  fileInfos.put(hash, fileInfo);
-  fileContents.put(hash, file.content);
+  system func postupgrade() {
+    fileInfos := HashMap.fromIter<FileId, FileInfo>(
+      Iter.fromArray(fileInfoEntries),
+      fileInfoEntries.size(),
+      Text.equal,
+      Text.hash
+    );
+    fileInfoEntries := [];
 
-  // Update last login
-  switch (userProfiles.get(caller)) {
-    case (null) {
-      // Create default profile if not exists
-      let newProfile : UserProfile = {
-        displayName = "DeVault User";
-        bio = "";
-        email = "";
-        createdAt = Time.now();
-        lastLoginAt = Time.now()
-      };
-      userProfiles.put(caller, newProfile)
+    fileContents := HashMap.fromIter<FileId, [Nat8]>(
+      Iter.fromArray(fileContentEntries),
+      fileContentEntries.size(),
+      Text.equal,
+      Text.hash
+    );
+    fileContentEntries := [];
+
+    userProfiles := HashMap.fromIter<Principal, UserProfile>(
+      Iter.fromArray(userProfileEntries),
+      userProfileEntries.size(),
+      Principal.equal,
+      Principal.hash
+    );
+    userProfileEntries := [];
+
+    userStorageLimits := HashMap.fromIter<Principal, Nat>(
+      Iter.fromArray(userStorageLimitEntries),
+      userStorageLimitEntries.size(),
+      Principal.equal,
+      Principal.hash
+    );
+    userStorageLimitEntries := []
+  };
+
+  // Store a file
+  public shared (msg) func storeFile(file : FileContent) : async Result.Result<FileInfo, Error> {
+    let caller = msg.caller;
+
+    if (Principal.isAnonymous(caller)) {
+      return #err(#NotAuthorized)
     };
-    case (?profile) {
-      let updatedProfile : UserProfile = {
-        displayName = profile.displayName;
-        bio = profile.bio;
-        email = profile.email;
-        createdAt = profile.createdAt;
-        lastLoginAt = Time.now()
+
+    // Calculate file size
+    let fileSize = file.content.size();
+
+    // Check if user has enough storage
+    let userStats = await getUserStorageStats(caller);
+    if (userStats.totalStorage + fileSize > userStats.storageLimit) {
+      return #err(#StorageLimitExceeded)
+    };
+
+    // Calculate hash
+    let hash = calculateHash(file.content);
+
+    // Create file info
+    let fileInfo : FileInfo = {
+      name = file.name;
+      contentType = file.contentType;
+      size = fileSize;
+      createdAt = file.createdAt;
+      owner = caller;
+      hash = hash
+    };
+
+    // Store file
+    fileInfos.put(hash, fileInfo);
+    fileContents.put(hash, file.content);
+
+    // Update last login
+    switch (userProfiles.get(caller)) {
+      case (null) {
+        // Create default profile if not exists
+        let newProfile : UserProfile = {
+          displayName = "DeVault User";
+          bio = "";
+          email = "";
+          createdAt = Time.now();
+          lastLoginAt = Time.now()
+        };
+        userProfiles.put(caller, newProfile)
       };
-      userProfiles.put(caller, updatedProfile)
+      case (?profile) {
+        let updatedProfile : UserProfile = {
+          displayName = profile.displayName;
+          bio = profile.bio;
+          email = profile.email;
+          createdAt = profile.createdAt;
+          lastLoginAt = Time.now()
+        };
+        userProfiles.put(caller, updatedProfile)
+      }
+    };
+
+    return #ok(fileInfo)
+  };
+
+  // Get file info by hash
+  public query func getFileInfo(hash : FileId) : async Result.Result<FileInfo, Error> {
+    switch (fileInfos.get(hash)) {
+      case (null) {#err(#NotFound)};
+      case (?info) {#ok(info)}
     }
   };
 
-  return #ok(fileInfo)
-};
+  // Get file content by hash (only for file owner)
+  public shared (msg) func getFileContent(hash : FileId) : async Result.Result<[Nat8], Error> {
+    let caller = msg.caller;
 
-// Get file info by hash
-public query func getFileInfo(hash : FileId) : async Result.Result<FileInfo, Error> {
-  switch (fileInfos.get(hash)) {
-    case (null) {#err(#NotFound)};
-    case (?info) {#ok(info)}
-  }
-};
+    switch (fileInfos.get(hash)) {
+      case (null) {
+        #err(#NotFound) case (null) {#err(#NotFound)};
+        case (?info) {
+          // Check if caller is the owner
+          if (Principal.notEqual(caller, info.owner)) {
+            return #err(#NotAuthorized)
+          };
 
-// Get file content by hash (only for file owner)
-public shared (msg) func getFileContent(hash : FileId) : async Result.Result<[Nat8], Error> {
-  let caller = msg.caller;
-
-  switch (fileInfos.get(hash)) {
-    case (null) {
-      #err(#NotFound) case (null) {#err(#NotFound)};
-      case (?info) {
-        // Check if caller is the owner
-        if (Principal.notEqual(caller, info.owner)) {
-          return #err(#NotAuthorized)
-        };
-
-        switch (fileContents.get(hash)) {
-          case (null) {#err(#SystemError)}; // This shouldn't happen if data integrity is maintained
-          case (?content) {#ok(content)}
+          switch (fileContents.get(hash)) {
+            case (null) {#err(#SystemError)}; // This shouldn't happen if data integrity is maintained
+            case (?content) {#ok(content)}
+          }
         }
       }
-    }
-  };
+    };
+  }
 
   // Get all files for a user
   public shared (msg) func getUserFiles() : async [FileInfo] {
